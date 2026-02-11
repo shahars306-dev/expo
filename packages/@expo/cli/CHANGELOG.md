@@ -8,6 +8,8 @@
 
 ### 🐛 Bug fixes
 
+- Key loader data by `contextKey` instead of URL pathname ([#43017](https://github.com/expo/expo/pull/43017) by [@hassankhan]
+
 ### 💡 Others
 
 - Bump to `dnssd-advertise@^1.1.3` ([#42928](https://github.com/expo/expo/pull/42928) by [@kitten](https://github.com/kitten))
