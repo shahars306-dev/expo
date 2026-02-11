@@ -1,24 +1,98 @@
----
-title: app.json / app.config.js
-description: A reference of available properties in Expo app config.
-maxHeadingDepth: 5
----
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Alert, SafeAreaView } from 'react-native';
 
-import { BookOpen02Icon } from '@expo/styleguide-icons/outline/BookOpen02Icon';
+export default function App() {
+  const [screen, setScreen] = useState('home'); // home, offer, search
+  const [rides, setRides] = useState([]); // רשימת הנסיעות
+  
+  // שדות לנסיעה חדשה
+  const [newRide, setNewRide] = useState({ from: '', to: '', time: '', driver: 'ישראל' });
 
-import schema from '~/public/static/schemas/unversioned/app-config-schema.json';
-import AppConfigSchemaTable from '~/ui/components/AppConfigSchemaTable';
-import { BoxLink } from '~/ui/components/BoxLink';
+  // פונקציה להוספת נסיעה
+  const addRide = () => {
+    if (!newRide.from || !newRide.to || !newRide.time) {
+      Alert.alert("שגיאה", "נא למלא את כל פרטי הנסיעה");
+      return;
+    }
+    setRides([...rides, { ...newRide, id: Date.now().toString() }]);
+    setNewRide({ from: '', to: '', time: '', driver: 'ישראל' }); // איפוס
+    setScreen('home');
+    Alert.alert("הצלחה!", "הנסיעה פורסמה בהצלחה");
+  };
 
-The following is a list of properties that are available for you under the `"expo"` key in **app.json** or **app.config.json**. These properties can be passed to the top level object of **app.config.js** or **app.config.ts**.
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>TREMPIST</Text>
+      </View>
 
-<BoxLink
-  title="Configuration with app config"
-  description="For information on app configuration, the differences between various app config files, and how to use them dynamically."
-  href="/workflow/configuration/"
-  Icon={BookOpen02Icon}
-/>
+      {/* מסך הבית */}
+      {screen === 'home' && (
+        <View style={styles.container}>
+          <Text style={styles.welcome}>שלום, מה תרצה לעשות?</Text>
+          <TouchableOpacity style={styles.mainButton} onPress={() => setScreen('offer')}>
+            <Text style={styles.buttonText}>🚗 אני מציע טרמפ</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.mainButton, {backgroundColor: '#2ecc71'}]} onPress={() => setScreen('search')}>
+            <Text style={styles.buttonText}>🙋‍♂️ אני מחפש טרמפ</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
-## Properties
+      {/* מסך הצעת טרמפ */}
+      {screen === 'offer' && (
+        <View style={styles.container}>
+          <Text style={styles.title}>פרסום נסיעה חדשה</Text>
+          <TextInput style={styles.input} placeholder="מאיפה?" textAlign="right" onChangeText={(t) => setNewRide({...newRide, from: t})} />
+          <TextInput style={styles.input} placeholder="לאן?" textAlign="right" onChangeText={(t) => setNewRide({...newRide, to: t})} />
+          <TextInput style={styles.input} placeholder="באיזו שעה?" textAlign="right" onChangeText={(t) => setNewRide({...newRide, time: t})} />
+          
+          <TouchableOpacity style={styles.saveButton} onPress={addRide}>
+            <Text style={styles.buttonText}>פרסם עכשיו</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setScreen('home')}>
+            <Text style={styles.backText}>ביטול וחזרה</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
-<AppConfigSchemaTable schema={schema} />
+      {/* מסך חיפוש טרמפ */}
+      {screen === 'search' && (
+        <View style={styles.container}>
+          <Text style={styles.title}>טרמפים זמינים</Text>
+          <FlatList 
+            data={rides}
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={<Text style={{textAlign: 'center', marginTop: 20}}>אין נסיעות פעילות כרגע</Text>}
+            renderItem={({item}) => (
+              <View style={styles.rideCard}>
+                <Text style={styles.rideTitle}>{item.from} ⬅️ {item.to}</Text>
+                <Text style={styles.rideDetail}>שעה: {item.time} | נהג: {item.driver}</Text>
+              </View>
+            )}
+          />
+          <TouchableOpacity onPress={() => setScreen('home')}>
+            <Text style={styles.backText}>חזרה לתפריט</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: '#f9f9f9' },
+  header: { backgroundColor: '#3498db', padding: 20, alignItems: 'center' },
+  headerText: { color: '#fff', fontSize: 24, fontWeight: 'bold' },
+  container: { flex: 1, padding: 20, justifyContent: 'center' },
+  welcome: { fontSize: 22, textAlign: 'center', marginBottom: 30, fontWeight: '600' },
+  mainButton: { backgroundColor: '#3498db', padding: 20, borderRadius: 12, marginBottom: 15, alignItems: 'center' },
+  buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  input: { backgroundColor: '#fff', padding: 15, borderRadius: 8, marginBottom: 15, borderWidth: 1, borderColor: '#ddd' },
+  saveButton: { backgroundColor: '#27ae60', padding: 15, borderRadius: 8, alignItems: 'center' },
+  backText: { color: '#3498db', textAlign: 'center', marginTop: 20, fontSize: 16 },
+  rideCard: { backgroundColor: '#fff', padding: 15, borderRadius: 10, marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.1, elevation: 3 },
+  rideTitle: { fontSize: 18, fontWeight: 'bold', textAlign: 'right' },
+  rideDetail: { fontSize: 14, color: '#666', textAlign: 'right', marginTop: 5 }
+});
